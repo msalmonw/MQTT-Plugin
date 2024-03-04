@@ -18,7 +18,7 @@ class NikoPlugin():
 
         #threads
         self.getConfigTrigger = threading.Event()
-        self.getConfigThread = threading.Thread(target=self.getConfig) 
+        self.getConfigThread = threading.Thread(target=self.getDeviceData) 
         self.getConfigThread.daemon = True
         self.getConfigThread.start()
 
@@ -38,7 +38,7 @@ class NikoPlugin():
         self.client.on_subscribe = self.onSubscribe
         self.client.message_callback_add("config/room", self.configCallback)
         self.client.message_callback_add("system/runlevel", self.systemRunlevelCallback)
-        self.client.message_callback_add("data/raw/socket/#", self.readDataFromDevice)
+        self.client.message_callback_add("data/raw/zigbee/#", self.readDataFromDevice)
 
     #callback called when client connects
     def onConnect(self, mqttc, obj, flags, reason_code, properties):
@@ -79,6 +79,7 @@ class NikoPlugin():
         print(self.runlevel)
         self.switchDevicesTrigger.set()
 
+
     #callback function when data is received from a device
     def readDataFromDevice(self, client, userdata, msg):
         deviceID = str(msg.topic).split('/')[-1]
@@ -89,7 +90,6 @@ class NikoPlugin():
                 self.client.publish(f'data/room/socket/{device}', json.dumps(data))
 
 
-
     #connect the client to the broker/server based on the configuration provied above
     def connectToBroker(self):
         self.client.connect(self.host, 8883)
@@ -97,12 +97,12 @@ class NikoPlugin():
 
 
     #threaded functions
-    def getConfig(self):
+    def getDeviceData(self):
         while True:
             if self.getConfigTrigger.is_set():
                 time.sleep(self.deviceUpdateInterval)
                 for device in self.deviceList:
-                    self.client.publish(f"data/room/socket/{device}/get", 'GET')
+                    self.client.publish(f"data/room/socket/{device}/get", json.dumps({"state": "", "power": "", "energy": "","linkquality": ""}))
             else:
                 self.getConfigTrigger.wait()
 
@@ -112,9 +112,9 @@ class NikoPlugin():
                 for device in self.deviceList:
                     id = self.deviceList[device]['id']
                     functionLevel = int(self.deviceList[device]['function_level'])
-                    if functionLevel >= self.runlevel + self.hysteresis:
+                    if functionLevel <= self.runlevel + self.hysteresis:
                         self.client.publish(f'room/socket/{device}/set', json.dumps({"id": id, "state": "ON"}))
-                    elif functionLevel <= self.runlevel:
+                    elif functionLevel >= self.runlevel:
                         self.client.publish(f'room/socket/{device}/set', json.dumps({"id": id, "state": "OFF"}))
                 self.switchDevicesTrigger.clear()
             else:

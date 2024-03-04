@@ -74,7 +74,9 @@ class NikoPlugin():
     #callback function when runlevel message is received on the system/runlevel topic
     def systemRunlevelCallback(self, client, userdata, msg):
         print("Data Received from ", msg.topic)
-        self.runlevel = int(msg.payload)
+        runlevel = json.loads(msg.payload)
+        self.runlevel = int(runlevel['runlevel'])
+        print(self.runlevel)
         self.switchDevicesTrigger.set()
 
     #callback function when data is received from a device

@@ -131,14 +131,19 @@ class NikoPlugin():
 
 if __name__ == '__main__':
     #load default configuration
-    with open('default.conf', 'r') as f:
-        defaultConfig = json.load(f)
+    try:
+        with open('default.conf', 'r') as f:
+            defaultConfig = json.load(f)
+    except Exception as e:
+        print("Default config not found or in use by another application")
+        time.sleep(5)
+        exit(1)
     
     #check if niko object from server exists
     if os.path.exists('serverConfig.json'):
+        print('Server config found, loading config.')
         with open('serverConfig.json', 'r') as f:
-            serverConfig = json.load(f)
-        
+                serverConfig = json.load(f)
         #initialize plugin with the server provided configuration
         niko = NikoPlugin(host=defaultConfig["mqtt_server"], 
                           username=defaultConfig["mqtt_user"], 
@@ -149,6 +154,7 @@ if __name__ == '__main__':
                           )
 
     else:
+        print('Server Config not found. Using default.')
         #initialize plugin with the default configuration
         niko = NikoPlugin(host=defaultConfig["mqtt_server"], 
                           username=defaultConfig["mqtt_user"], 
@@ -161,3 +167,4 @@ if __name__ == '__main__':
         niko.connectToBroker()
     except KeyboardInterrupt:
         niko.cleanExit()
+        time.sleep(5)

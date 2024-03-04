@@ -1,0 +1,26 @@
+{
+    "plugin": {
+        "niko": {
+            "device_update_interval": 10,
+            "hysteresis": 5,
+            "devicelist": {
+                "socket1": {
+                    "id": "ABCDEF",
+                    "function_level": "80"
+                },
+                "socket2": {
+                    "id": "GHI",
+                    "function_level": "80"
+                },
+                "socket3": {
+                    "id": "JKL",
+                    "function_level": "80"
+                },
+                "socket4": {
+                    "id": "MNOP",
+                    "function_level": "80"
+                }
+            }
+        }
+    }
+}
